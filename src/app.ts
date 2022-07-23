@@ -4,7 +4,7 @@ import {initRoutes, routesMap} from './routes/v1/Routes'
 const app = express()
 app.use(express.json())
 
-initRoutes()
+initRoutes(app)
 
 const port = process.env.PORT || 8080
 app.listen(port, () => {
