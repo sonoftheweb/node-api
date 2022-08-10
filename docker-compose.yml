@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  auth:
+    container_name: auth
+    restart: unless-stopped
+    environment:
+      PORT: '${AUTH_PORT:-8080}'
+    build:
+      context: services/auth
+      args:
+        PORT: '${AUTH_PORT:-8080}'
+    volumes:
+      - '/app/node_modules'
+      - './services/auth/:/app'
+    ports:
+      - '${AUTH_PORT:-8080}:8080'
+    depends_on:
+      - mariadb
+    networks:
+      - loadly
+
+  mariadb:
+    image: 'mariadb:10'
+    ports:
+      - '${FORWARD_DB_PORT:-3306}:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD:-loadly}'
+      MYSQL_DATABASE: '${DB_DATABASE:-loadly}'
+      MYSQL_USER: '${DB_USERNAME:-loadly}'
+      MYSQL_PASSWORD: '${DB_PASSWORD:-loadly}'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    volumes:
+      - 'loadly-mariadb:/var/lib/mysql'
+    networks:
+      - loadly
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping" ]
+#
+#  redis:
+#    image: 'redis:alpine'
+#    ports:
+#      - '${FORWARD_REDIS_PORT:-6379}:6379'
+#    volumes:
+#      - 'loadly-redis:/data'
+#    networks:
+#      -   loadly
+#    healthcheck:
+#      test: [ "CMD", "redis-cli", "ping" ]
+#      retries: 3
+#      timeout: 5s
+
+networks:
+  loadly:
+    driver: bridge
+volumes:
+  loadly-mariadb:
+    driver: local
+  loadly-redis:
+    driver: local
